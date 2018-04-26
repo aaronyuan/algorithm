@@ -1,3 +1,6 @@
+#ifndef _RB_TREE_H_
+#define _RB_TREE_H_
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -15,11 +18,10 @@ typedef struct node {
 	int key;
 } node_t;
 
-node_t nil = {
-	.left = NULL;
-	.right = NULL;
-	.parent = NULL;
-	.c = black;
-};
+extern node_t *nil_p;
 
-node_t *root;
+void left_rotate(node_t **, node_t *);
+void right_rotate(node_t **, node_t *);
+void preorder_walk(node_t *);
+
+#endif	/* _RB_TREE_H_ */
