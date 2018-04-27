@@ -11,12 +11,12 @@ node_t *nil_p = &nil;
 
 void preorder_walk(node_t *root)
 {
-	if (root == NULL || root == nil_p) {
+	if (root == nil_p) {
 		return;
 	}
 
 
-    printf("%d ", root->key);
+	printf("%d(%s) ", root->key, root->c == black ? "b" : "r");
 	preorder_walk(root->left);
 	preorder_walk(root->right);
 }
@@ -75,4 +75,88 @@ void right_rotate(node_t **root, node_t *z)
 
 	y->parent = z->parent;
 	z->parent = y;
+}
+
+void rb_insert(node_t **root, node_t *z)
+{
+	node_t *x, *y;
+
+	y = nil_p;
+	x = *root;
+
+	while (x != nil_p) {
+		y = x;
+
+		if (z->key < x->key) {
+			x = y->left;
+		} else {
+			x = y->right;
+		}
+	}
+
+	z->parent = y;
+
+	if (y == nil_p) {
+		*root = z;
+	} else if (z->key < y->key) {
+		y->left = z;
+	} else {
+		y->right = z;
+	}
+
+	z->c = red;
+	z->left = nil_p;
+	z->right = nil_p;
+
+	rb_insert_fixup(root, z);
+}
+
+void rb_insert_fixup(node_t **root, node_t *z)
+{
+	node_t *y;
+
+	while (z->parent->c != black) {
+		if (z->parent->parent->left == z->parent) {
+			/* y is z's uncle */
+			y = z->parent->parent->right;
+
+			if (y->c == red) {
+				/* case 1: uncle is a red node */
+				z->parent->c = black;
+				z->parent->parent->c = red;
+				y->c = black;
+				z = z->parent->parent;
+			} else {
+				/* uncle is a black one */
+				if (z == z->parent->right) {
+					/* case 2: z is right child */
+					z = z->parent;
+					left_rotate(root, z);
+				}
+				/* case 3: z is left child */
+				z->parent->c = black;
+				z->parent->parent->c = red;
+				right_rotate(root, z->parent->parent);
+			}
+		} else {
+			y = z->parent->parent->left;
+
+			if (y->c == red) {
+				z->parent->c = black;
+				z->parent->parent->c = red;
+				y->c = black;
+				z = z->parent->parent;
+			} else {
+				if (z == z->parent->left) {
+					z = z->parent;
+					right_rotate(root, z);
+				}
+				z->parent->c = black;
+				z->parent->parent->c = red;
+				left_rotate(root, z->parent->parent);
+			}
+		}
+	}
+
+	(*root)->c = black;
 }
