@@ -20,11 +20,10 @@ typedef struct node {
 
 extern node_t *nil_p;
 
-void left_rotate(node_t **, node_t *);
-void right_rotate(node_t **, node_t *);
 void preorder_walk(node_t *);
-
 void rb_insert(node_t **, node_t *);
 void rb_insert_fixup(node_t **, node_t *);
+void rb_delete(node_t **, node_t *);
+void rb_delete_fixup(node_t **, node_t *);
 
 #endif	/* _RB_TREE_H_ */

@@ -15,7 +15,6 @@ void preorder_walk(node_t *root)
 		return;
 	}
 
-
 	printf("%d(%s) ", root->key, root->c == black ? "b" : "r");
 	preorder_walk(root->left);
 	preorder_walk(root->right);
@@ -47,6 +46,31 @@ void left_rotate(node_t **root, node_t *z)
 
 	y->parent = z->parent;
 	z->parent = y;
+}
+
+void rb_transplant(node_t **root, node_t *u, node_t *v)
+{
+	if (u->parent == nil_p) {
+		*root = v;
+	} else if (u->parent->left == u) {
+		u->parent->left = v;
+	} else {
+		u->parent->right = v;
+	}
+
+	v->parent = u->parent;
+}
+
+node_t *rb_minimum(node_t *y)
+{
+	node_t *x = y;
+
+	while (y->left != nil_p) {
+		x = y;
+		y = y->left;
+	}
+
+	return x;
 }
 
 void right_rotate(node_t **root, node_t *z)
@@ -159,4 +183,114 @@ void rb_insert_fixup(node_t **root, node_t *z)
 	}
 
 	(*root)->c = black;
+}
+
+void rb_delete(node_t **root, node_t *z)
+{
+	node_t *y = z;
+	node_t *x = NULL;
+	enum color y_orig_c;
+
+	y_orig_c = z->c;
+
+	if (z->left == nil_p) {
+		x = z->right;
+		rb_transplant(root, z, z->right);
+	} else if (z->right == nil_p) {
+		x = z->left;
+		rb_transplant(root, z, z->left);
+	} else {
+		y = rb_minimum(z->right);
+		y_orig_c = y->c;
+		x = y->right;
+
+		if (y->parent == z) {
+			x->parent = y;
+		} else {
+			rb_transplant(root, y, y->right);
+			y->parent->left = x;
+			y->right = z->right;
+		}
+
+		rb_transplant(root, z, y);
+		y->left = z->left;
+		y->c = z->c;
+	}
+
+	if (y_orig_c == black) {
+		rb_delete_fixup(root, x);
+	}
+}
+
+void rb_delete_fixup(node_t **root, node_t *x)
+{
+	node_t *w;
+
+	while (x != *root && x->c == black) {
+		if (x == x->parent->left) {
+			w = x->parent->right;
+
+			/* case 1: x's uncle is red */
+			if (w->c == red) {
+				w->c = black;
+				x->parent->c = red;
+
+				left_rotate(root, x->parent);
+				w = x->parent->right;
+			}
+
+			/* case 2: x's uncle is black and has 2 black children */ 
+			if (w->left->c == black && w->right->c == black) {
+				w->c = red;
+				x = x->parent;
+			} else {
+				/* case 3: left child of x's uncle is red */
+				if (w->right->c == black) {
+					w->c = red;
+					w->left->c = black;
+					right_rotate(root, w);
+					w = x->parent->right;
+				}
+
+				/* case 4: right child of x's uncle is red */
+				w->c = x->parent->c;
+				x->parent->c = black;
+				w->right->c = black;
+				left_rotate(root, x->parent);
+
+				x = *root;
+			}
+		} else {
+			w = x->parent->left;
+
+			if (w->c == red) {
+				w->c = black;
+				x->parent->c = red;
+
+				right_rotate(root, x->parent);
+				w = x->parent->left;
+			}
+
+			if (w->left->c == black && w->right->c == black) {
+				w->c = red;
+				x = x->parent;
+			} else {
+				if (w->left->c == black) {
+					w->c = red;
+					w->right->c = black;
+					left_rotate(root, w);
+					w = x->parent->left;
+				}
+
+				w->c = x->parent->c;
+				x->parent->c = black;
+				w->left->c = black;
+				right_rotate(root, x->parent);
+
+				x = *root;
+			}
+		}
+	}
+
+	x->c = black;
 }
