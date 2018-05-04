@@ -218,14 +218,34 @@ void avl_insert(node_t **root, node_t *z)
 
 void avl_delete(node_t **root, node_t *z)
 {
-	node_t * y;
+	node_t *y, *x;
 
 	if (z->left == NULL) {
-		avl_transplant(root, z->right);
+		x = z->parent;
+		avl_transplant(root, z, z->right);
 	} else if (z->right == NULL) {
-		avl_transplant(root, z->left);
+		x = z->parent;
+		avl_transplant(root, z, z->left);
 	} else {
-		y = minimum(z);
-		
+		y = minimum(z->right);
+		assert(y != NULL);
+
+		if (y->parent == z) {
+			x = y;
+		} else {
+			x = y->parent;
+			avl_transplant(root, y, y->right);
+			y->right = z->right;
+			y->right->parent = y;
+		}
+
+		avl_transplant(root, z, y);
+		y->left = z->left;
+		y->left->parent = y;
+	}
+
+	while (x != NULL) {
+		x = balance(root, x);
+		x = x->parent;
 	}
 }
